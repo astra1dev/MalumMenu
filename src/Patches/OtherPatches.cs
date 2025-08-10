@@ -19,6 +19,23 @@ public static class PlatformSpecificData_Serialize
     }
 }
 
+[HarmonyPatch(typeof(GameData), nameof(GameData.RemovePlayer))]
+public static class GameData_RemovePlayer_Patch
+{
+    // Use a Prefix patch to capture the PlayerInfo *before* it gets removed from the game's data lists.
+    public static void Prefix(GameData __instance, byte playerId)
+    {
+        if (CheatToggles.notifyOnDisconnect){
+            var player = __instance.GetPlayerById(playerId);
+            // Ensure the player exists and wasn't already marked disconnected to avoid duplicate logs.
+            if (player != null && !player.Disconnected){
+                NotificationHandler.HandlePlayerDisconnect(player);
+            }
+        }
+    }
+}
+
+
 [HarmonyPatch(typeof(FreeChatInputField), nameof(FreeChatInputField.UpdateCharCount))]
 public static class FreeChatInputField_UpdateCharCount
 {
@@ -42,7 +59,7 @@ public static class FreeChatInputField_UpdateCharCount
 
             __instance.charCountText.color = new Color(1f, 1f, 0f, 1f);
 
-        }else{ // Over or equal to 100%
+            }else{ // Over or equal to 100%
 
             __instance.charCountText.color = Color.red;
 

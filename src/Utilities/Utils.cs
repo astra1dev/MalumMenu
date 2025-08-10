@@ -84,7 +84,7 @@ public static class Utils
         }
 
         return fullRequirements;
-        
+
     }
 
     // Adjusts HUD resolution
@@ -105,7 +105,7 @@ public static class Utils
 
             PlayerControl.LocalPlayer.MurderPlayer(target, MurderResultFlags.Succeeded);
             return;
-        
+
         }
 
         foreach (var item in PlayerControl.AllPlayerControls)
@@ -125,7 +125,7 @@ public static class Utils
 
             PlayerControl.LocalPlayer.CmdReportDeadBody(playerData);
             return;
-        
+
         }
 
         var HostData = AmongUsClient.Instance.GetHost();
@@ -149,7 +149,7 @@ public static class Utils
                 PlayerControl.LocalPlayer.RpcCompleteTask(task.Id);
             }
             return;
-        
+
         }
 
         var HostData = AmongUsClient.Instance.GetHost();
@@ -205,7 +205,7 @@ public static class Utils
 
         lineRenderer.material = material;
         lineRenderer.SetColors(color, color);
-                
+
         lineRenderer.SetPosition(0, sourceObject.transform.position);
         lineRenderer.SetPosition(1, targetObject.transform.position);
     }
@@ -231,13 +231,13 @@ public static class Utils
 
     // Get the distance between two players as a float
     public static float getDistanceFrom(PlayerControl target, PlayerControl source = null){
-        
+
         if (source.IsNull()){
             source = PlayerControl.LocalPlayer;
         }
 
         Vector2 vector = target.GetTruePosition() - source.GetTruePosition();
-		float magnitude = vector.magnitude;
+        float magnitude = vector.magnitude;
 
         return magnitude;
 
@@ -245,7 +245,7 @@ public static class Utils
 
     // Returns a list of all the players in the game ordered from closest to farthest (from LocalPlayer by default)
     public static System.Collections.Generic.List<PlayerControl> getPlayersSortedByDistance(PlayerControl source = null){
-        
+
         if (source.IsNull()){
             source = PlayerControl.LocalPlayer;
         }
@@ -263,9 +263,9 @@ public static class Utils
                 outputList.Add(player);
             }
         }
-        
+
         outputList = outputList.OrderBy(target => getDistanceFrom(target, source)).ToList();
-        
+
         if (outputList.Count <= 0)
         {
             return null;
@@ -280,10 +280,10 @@ public static class Utils
     {
         // If playing the tutorial
         if (isFreePlay)
-	    {
+        {
             return (byte)AmongUsClient.Instance.TutorialMapId;
 
-	    }else{
+        }else{
             // Works for local/online games
             return GameOptionsManager.Instance.currentGameOptions.MapId;
         }
@@ -292,6 +292,19 @@ public static class Utils
     // Get SystemType of the room the player is currently in
     public static SystemTypes getCurrentRoom(){
         return HudManager.Instance.roomTracker.LastRoom.RoomId;
+    }
+
+    // Gets the room object from a Vector2 position.
+    public static PlainShipRoom getRoomFromPosition(Vector2 position){
+        if (ShipStatus.Instance == null) return null;
+
+        foreach (var room in ShipStatus.Instance.AllRooms)
+        {
+            if (room != null && room.roomArea != null && room.roomArea.OverlapPoint(position)){
+                return room;
+            }
+        }
+        return null;
     }
 
     // Fancy colored ping text
@@ -317,14 +330,14 @@ public static class Utils
         if(!string.IsNullOrEmpty(keyCodeStr)){ // Empty strings are automatically invalid
 
             try{
-                
+
                 // Case-insensitive parse of UnityEngine.KeyCode to check if string is validssss
                 KeyCode keyCode = (KeyCode)System.Enum.Parse(typeof(KeyCode), keyCodeStr, true);
-                
+
                 return keyCode;
 
             }catch{}
-        
+
         }
 
         return KeyCode.Delete; // If string is invalid, return Delete as the default key
@@ -336,14 +349,14 @@ public static class Utils
         if(!string.IsNullOrEmpty(platformStr)){ // Empty strings are automatically invalid
 
             try{
-                
+
                 // Case-insensitive parse of Platforms from string (if it valid)
                 platform = (Platforms)System.Enum.Parse(typeof(Platforms), platformStr, true);
-                
+
                 return true; // If platform type is valid, return false
 
             }catch{}
-        
+
         }
 
         platform = null;
@@ -381,7 +394,7 @@ public static class Utils
                 }
 
                 nameTag = $"<color=#{ColorUtility.ToHtmlStringRGB(playerInfo.Role.TeamColor)}><size=70%>{getRoleName(playerInfo)}</size>\r\n{nameTag}</color>";
-            
+
             } else if (PlayerControl.LocalPlayer.Data.Role.NameColor == playerInfo.Role.NameColor){
 
                 if (isChat){
@@ -400,7 +413,7 @@ public static class Utils
     // Found here: https://github.com/NuclearPowered/Reactor/blob/6eb0bf19c30733b78532dada41db068b2b247742/Reactor/Networking/Patches/HttpPatches.cs
     public static void showPopup(string text){
         var popup = Object.Instantiate(DiscordManager.Instance.discordPopup, Camera.main!.transform);
-        
+
         var background = popup.transform.Find("Background").GetComponent<SpriteRenderer>();
         var size = background.size;
         size.x *= 2.5f;
@@ -438,7 +451,7 @@ public static class Utils
             var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(path);
             var texture = new Texture2D(1, 1, TextureFormat.ARGB32, false);
             using MemoryStream ms = new();
-            
+
             stream.CopyTo(ms);
             ImageConversion.LoadImage(texture, ms.ToArray(), false);
             return texture;

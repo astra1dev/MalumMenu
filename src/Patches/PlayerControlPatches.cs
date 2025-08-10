@@ -54,9 +54,9 @@ public static class PlayerControl_CmdCheckMurder
 [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.TurnOnProtection))]
 public static class PlayerControl_TurnOnProtection
 {
-	// Prefix patch of PlayerControl.ProtectPlayer to render all protections visible if CheatToggles.seeGhosts is enabled
+    // Prefix patch of PlayerControl.ProtectPlayer to render all protections visible if CheatToggles.seeGhosts is enabled
     public static void Prefix(ref bool visible){
-		if (CheatToggles.seeGhosts){
+        if (CheatToggles.seeGhosts){
             visible = true;
         }
     }
@@ -98,5 +98,15 @@ public static class NoAntiCheat_PlayerControl_RpcSyncSettings_Prefix
     public static bool Prefix(PlayerControl __instance, byte[] optionsByteArray)
     {
         return !CheatToggles.noOptionsLimits;
+    }
+}
+
+[HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.MurderPlayer))]
+public static class PlayerControl_MurderPlayer_NotificationPatch
+{
+    // Postfix patch to notify when a player is killed.
+    public static void Postfix(PlayerControl __instance, PlayerControl target){
+        // __instance is the killer, target is the victim.
+        NotificationHandler.HandlePlayerKill(__instance, target);
     }
 }
