@@ -141,7 +141,7 @@ public class MenuUI : MonoBehaviour
             new ToggleInfo(" Enable Chat", () => CheatToggles.alwaysChat, x => CheatToggles.alwaysChat = x),
             new ToggleInfo(" Unlock Textbox", () => CheatToggles.chatJailbreak, x => CheatToggles.chatJailbreak = x)
         ], []));
-
+        
         // Host-Only cheats are temporarly disabled because of some bugs
 
         //groups.Add(new GroupInfo("Host-Only", false, new List<ToggleInfo>() {
@@ -180,6 +180,13 @@ public class MenuUI : MonoBehaviour
                 ])
 
             ]));
+
+        groups.Add(new GroupInfo("Notifications", false, [
+            new ToggleInfo(" On Player Death", () => CheatToggles.notifyOnDeath, x => CheatToggles.notifyOnDeath = x),
+            new ToggleInfo(" On Player Disconnect", () => CheatToggles.notifyOnDisconnect, x => CheatToggles.notifyOnDisconnect = x),
+            new ToggleInfo(" On Vent Usage", () => CheatToggles.notifyOnVent, x => CheatToggles.notifyOnVent = x),
+            new ToggleInfo(" Show Notification Log", () => CheatToggles.showNotificationLog, x => CheatToggles.showNotificationLog = x)
+        ], []));
 
         groups.Add(new GroupInfo("Passive", false, [
             new ToggleInfo(" Free Cosmetics", () => CheatToggles.freeCosmetics, x => CheatToggles.freeCosmetics = x),
