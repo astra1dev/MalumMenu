@@ -36,7 +36,6 @@ public static class TextBoxTMP_IsCharAllowed
 
             if (blockedSymbols.Contains(i))
             {
-                Debug.Log($"[MalumMenu] Blocked control character: {i} (Unicode: {(int)i:X4})");
                 __result = false;
                 return false;
             }
