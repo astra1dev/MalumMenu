@@ -11,7 +11,7 @@ public static class TextBoxTMP_Update
     public static void Postfix(TextBoxTMP __instance)
     {
         if (CheatToggles.chatJailbreak)
-        { 
+        {
             if (!__instance.hasFocus){return;}
 
             // If the user is pressing Ctrl + C, copy the text from the chatbox to the device's clipboard
@@ -20,6 +20,16 @@ public static class TextBoxTMP_Update
                 ClipboardHelper.PutClipboardString(__instance.text);
             }
         }
+    }
+}
+
+[HarmonyPatch(typeof(TextBoxTMP), nameof(TextBoxTMP.GiveFocus))]
+public static class TextBoxTMP_GiveFocus
+{
+    // Postfix patch of TextBoxTMP.GiveFocus to allow pasting from the clipboard
+    public static void Postfix(TextBoxTMP __instance)
+    {
+        __instance.AllowPaste = CheatToggles.chatJailbreak;
     }
 }
 
