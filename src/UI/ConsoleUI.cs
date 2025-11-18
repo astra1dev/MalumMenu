@@ -33,7 +33,8 @@ namespace MalumMenu
 
                 logStyle = new GUIStyle(GUI.skin.label)
                 {
-                    fontSize = 20
+                    fontSize = 20,
+                    richText = true // Essential for colored names
                 };
 
             }
@@ -55,6 +56,10 @@ namespace MalumMenu
             foreach (var log in logEntries)
             {
                 GUILayout.Label(log, logStyle); // Use the custom GUIStyle with the specified font size
+            }
+
+            if (GUILayout.Button("Clear Log")){
+                logEntries.Clear();
             }
 
             GUILayout.EndScrollView();
