@@ -89,6 +89,12 @@ namespace MalumMenu
         public static bool freeCosmetics = true;
         public static bool avoidBans = true;
 
+        //Notifications
+        public static bool notifyOnDeath;
+        public static bool notifyOnDisconnect;
+        public static bool notifyOnVent;
+        public static bool showNotificationLog;
+
         public static void DisablePPMCheats(string variableToKeep)
         {
             reportBody = variableToKeep != "reportBody" ? false : reportBody;
