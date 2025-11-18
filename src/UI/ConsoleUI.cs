@@ -7,7 +7,7 @@ namespace MalumMenu
     {
         public bool isVisible = false;
         private Vector2 scrollPosition = Vector2.zero;
-        private List<string> logEntries = new List<string>();
+        public static List<string> logEntries = new List<string>();
         private Rect windowRect = new Rect(320, 10, 500, 300); // Adjust size and position as needed
         private GUIStyle logStyle;
 
