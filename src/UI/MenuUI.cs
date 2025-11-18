@@ -102,7 +102,7 @@ public class MenuUI : MonoBehaviour
         groups.Add(new GroupInfo("Chat", false, new List<ToggleInfo>() {
             new ToggleInfo(" Enable Chat", () => CheatToggles.alwaysChat, x => CheatToggles.alwaysChat = x),
             new ToggleInfo(" Unlock Textbox", () => CheatToggles.chatJailbreak, x => CheatToggles.chatJailbreak = x)
-        }, new List<SubmenuInfo>()));
+        }, []));
 
         // Host-Only cheats are temporarly disabled because of some bugs
 
@@ -111,12 +111,6 @@ public class MenuUI : MonoBehaviour
         //    new ToggleInfo(" Godmode", () => CheatSettings.godMode, x => CheatSettings.godMode = x),
         //    new ToggleInfo(" EvilVote", () => CheatSettings.evilVote, x => CheatSettings.evilVote = x),
         //    new ToggleInfo(" VoteImmune", () => CheatSettings.voteImmune, x => CheatSettings.voteImmune = x)
-        //}, new List<SubmenuInfo>()));
-
-        // Console is temporarly disabled until we implement some features for it
-
-        //groups.Add(new GroupInfo("Console", false, new List<ToggleInfo>() {
-        //    new ToggleInfo(" ConsoleUI", () => MalumMenu.consoleUI.isVisible, x => MalumMenu.consoleUI.isVisible = x),
         //}, new List<SubmenuInfo>()));
 
         groups.Add(new GroupInfo("Host-Only", false, 
@@ -139,7 +133,15 @@ public class MenuUI : MonoBehaviour
             new ToggleInfo(" Free Cosmetics", () => CheatToggles.freeCosmetics, x => CheatToggles.freeCosmetics = x),
             new ToggleInfo(" Avoid Penalties", () => CheatToggles.avoidBans, x => CheatToggles.avoidBans = x),
             new ToggleInfo(" Unlock Extra Features", () => CheatToggles.unlockFeatures, x => CheatToggles.unlockFeatures = x),
-        }, new List<SubmenuInfo>()));
+        }, []));
+
+        groups.Add(new GroupInfo("Notifications", false, [
+            new ToggleInfo(" Console", () => MalumMenu.consoleUI.isVisible, x => MalumMenu.consoleUI.isVisible = x),
+            new ToggleInfo(" On Player Death", () => CheatToggles.notifyOnDeath, x => CheatToggles.notifyOnDeath = x),
+            new ToggleInfo(" On Player Disconnect", () => CheatToggles.notifyOnDisconnect, x => CheatToggles.notifyOnDisconnect = x),
+            new ToggleInfo(" On Vent Usage", () => CheatToggles.notifyOnVent, x => CheatToggles.notifyOnVent = x),
+            new ToggleInfo(" Show Notification Log", () => CheatToggles.showNotificationLog, x => CheatToggles.showNotificationLog = x)
+        ], []));
     }
 
     private void Update(){
