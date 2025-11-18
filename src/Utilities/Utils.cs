@@ -90,6 +90,19 @@ public static class Utils
         ResolutionManager.ResolutionChanged.Invoke((float)Screen.width / Screen.height, Screen.width, Screen.height, Screen.fullScreen);
     }
 
+	// Gets the room object from a Vector2 position.
+    public static PlainShipRoom getRoomFromPosition(Vector2 position){
+        if (ShipStatus.Instance == null) return null;
+
+        foreach (var room in ShipStatus.Instance.AllRooms)
+        {
+            if (room != null && room.roomArea != null && room.roomArea.OverlapPoint(position)){
+                return room;
+            }
+        }
+        return null;
+    }
+
     // Get RoleBehaviour from a RoleType
     public static RoleBehaviour getBehaviourByRoleType(RoleTypes roleType) {
         return RoleManager.Instance.AllRoles.First(r => r.Role == roleType);
