@@ -3,6 +3,7 @@ using AmongUs.Data;
 using UnityEngine;
 using System;
 using System.Security.Cryptography;
+using System.Collections.Generic;
 
 namespace MalumMenu;
 
@@ -226,5 +227,49 @@ public static class Vent_CanUse
                 __result = num;
             }    
         }
+    }
+}
+
+[HarmonyPatch(typeof(GameData), nameof(GameData.RemovePlayer))]
+public static class GameData_RemovePlayer_Patch
+{
+    private static readonly HashSet<byte> notifiedDisconnects = new();
+
+    public static void ClearNotifiedDisconnects() => notifiedDisconnects.Clear();
+
+    // Use a Prefix patch to capture the PlayerInfo *before* it gets removed from the game's data lists.
+    public static void Prefix(GameData __instance, byte playerId)
+    {
+        // Only notify during an active game, not in lobby or post-game.
+        if (CheatToggles.notifyOnDisconnect && Utils.isInGame)
+        {
+            // If we've already notified for this player, don't do it again.
+            if (notifiedDisconnects.Contains(playerId))
+            {
+                return;
+            }
+
+            var player = __instance.GetPlayerById(playerId);
+            // The check for `!player.Disconnected` was preventing this from ever firing. It's removed.
+            if (player != null)
+            {
+                NotificationHandler.HandlePlayerDisconnect(player);
+                // Add the player to the set so we don't notify again for this game session.
+                notifiedDisconnects.Add(playerId);
+            }
+        }
+    }
+}
+
+[HarmonyPatch(typeof(AmongUsClient), nameof(AmongUsClient.OnGameEnd))]
+public static class AmongUsClient_OnGameEnd_Patch
+{
+    public static void Postfix()
+    {
+        // Clear the set of notified disconnected players when a game ends.
+        GameData_RemovePlayer_Patch.ClearNotifiedDisconnects();
+
+        // Clear the set of notified killed victims when a game ends.
+        PlayerControl_MurderPlayer_Patch.ClearNotifiedKilledVictims();
     }
 }
