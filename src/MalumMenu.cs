@@ -15,10 +15,10 @@ namespace MalumMenu;
 public partial class MalumMenu : BasePlugin
 {
     public Harmony Harmony { get; } = new(Id);
-    public static string malumVersion = "2.4.2";
-    public static List<string> supportedAU = new List<string> { "2024.9.4" };
+    public static string malumVersion = "2.5.3";
+    public static List<string> supportedAU = new List<string> { "2025.9.9" };
     public static MenuUI menuUI;
-    // public static ConsoleUI consoleUI;
+    public static ConsoleUI consoleUI;
     public static ConfigEntry<string> menuKeybind;
     public static ConfigEntry<string> menuHtmlColor;
     public static ConfigEntry<string> spoofLevel;
@@ -77,15 +77,16 @@ public partial class MalumMenu : BasePlugin
         Harmony.PatchAll();
         
         menuUI = AddComponent<MenuUI>();
-        // consoleUI = AddComponent<ConsoleUI>();
+        consoleUI = AddComponent<ConsoleUI>();
 
-        // Disable Telemetry (haven't fully tested if it works, but according to Unity docs it should)
+        // Disable Telemetry (better one)
         if (noTelemetry.Value){
-
-            Analytics.enabled = false;
             Analytics.deviceStatsEnabled = false;
+            Analytics.enabled = false;
+            Analytics.initializeOnStartup = false;
+            Analytics.limitUserTracking = true;
+            CrashReportHandler.enableCaptureExceptions = false;
             PerformanceReporting.enabled = false;
-
         }
 
         SceneManager.add_sceneLoaded((Action<Scene, LoadSceneMode>) ((scene, _) =>
