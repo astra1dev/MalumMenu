@@ -104,7 +104,7 @@ public class MenuUI : MonoBehaviour
             new ToggleInfo(" Unlock Textbox", () => CheatToggles.chatJailbreak, x => CheatToggles.chatJailbreak = x)
         }, new List<SubmenuInfo>()));
 
-        // Host-Only cheats are temporarly disabled because of some bugs
+        // Host-Only cheats are temporarily disabled because of some bugs
 
         //groups.Add(new GroupInfo("Host-Only", false, new List<ToggleInfo>() {
         //    new ToggleInfo(" ImpostorHack", () => CheatSettings.impostorHack, x => CheatSettings.impostorHack = x),
@@ -113,7 +113,7 @@ public class MenuUI : MonoBehaviour
         //    new ToggleInfo(" VoteImmune", () => CheatSettings.voteImmune, x => CheatSettings.voteImmune = x)
         //}, new List<SubmenuInfo>()));
 
-        // Console is temporarly disabled until we implement some features for it
+        // Console is temporarily disabled until we implement some features for it
 
         //groups.Add(new GroupInfo("Console", false, new List<ToggleInfo>() {
         //    new ToggleInfo(" ConsoleUI", () => MalumMenu.consoleUI.isVisible, x => MalumMenu.consoleUI.isVisible = x),
