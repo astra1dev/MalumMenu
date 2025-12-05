@@ -108,6 +108,7 @@ public struct CheatToggles
     public static bool forceStartGame;
     public static bool noGameEnd;
     public static bool noOptionsLimits;
+    public static bool inStart;
 
     //Passive
     public static bool unlockFeatures;
