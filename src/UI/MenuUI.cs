@@ -174,6 +174,7 @@ public class MenuUI : MonoBehaviour
             [
                 new ToggleInfo(" Kill While Vanished", () => CheatToggles.killVanished,
                     x => CheatToggles.killVanished = x),
+                new ToggleInfo("Insta-Start", () => CheatToggles.inStart, x => CheatToggles.inStart = x),
                 new ToggleInfo(" Kill Anyone", () => CheatToggles.killAnyone, x => CheatToggles.killAnyone = x),
                 new ToggleInfo(" No Kill Cooldown", () => CheatToggles.zeroKillCd, x => CheatToggles.zeroKillCd = x),
                 new ToggleInfo(" Protect Player", () => CheatToggles.protectPlayer, x => CheatToggles.protectPlayer = x),
@@ -294,6 +295,44 @@ public class MenuUI : MonoBehaviour
             hue += Time.deltaTime * 0.3f; // Adjust speed of color change, higher multiplier = faster
             if (hue > 1f) hue -= 1f; // Loop hue back to 0 when it exceeds 1
         }
+
+        if (CheatToggles.inStart)
+            {
+                var client = AmongUsClient.Instance;
+
+                if (client.ClientId != client.HostId)
+                {
+                    HudManager.Instance.Notifier.AddDisconnectMessage("This is a host-only feature!");
+                    // Do not call EndGame from a non-host, just notify and exit
+                    CheatToggles.inStart = false;
+                    return;
+                }
+                if (client.connection == null)
+                {
+                    CheatToggles.inStart = false;
+                    return;
+                }
+
+                try
+                {
+                    var gameStartManager = GameStartManager.Instance;
+                    var gameManager = GameManager.Instance;
+                    
+                    if (gameStartManager != null)
+                    {
+                        gameStartManager.countDownTimer = 0f;
+                        gameStartManager.startState = GameStartManager.StartingStates.Countdown;
+                        gameStartManager.BeginGame();
+                    }
+                    CheatToggles.inStart = false;
+                    return;
+                }
+                catch
+                {
+                    CheatToggles.inStart = false;
+                    return;
+                }
+            }
 
         if (CheatToggles.panic)
         {
