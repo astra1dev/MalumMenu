@@ -15,16 +15,12 @@ public static class NumberOption_Increase
     public static bool Prefix(NumberOption __instance)
     {
         if (!CheatToggles.noOptionsLimits) return true;
-        
-        if (Utils.isHideNSeek || !Utils.isHideNSeek && __instance.TitleText.text != "# Impostors" && __instance.TitleText.text != "Player Speed")
-        {
-            __instance.Value +=  __instance.Increment;
-            __instance.UpdateValue();
-            __instance.OnValueChanged.Invoke(__instance);
-            __instance.AdjustButtonsActiveState();
-            return false;
-        }
-        else return true;
+        if (!Utils.isHideNSeek && __instance.Title is StringNames.GameNumImpostors or StringNames.GamePlayerSpeed) return true;
+        __instance.Value += __instance.Increment;
+        __instance.UpdateValue();
+        __instance.OnValueChanged.Invoke(__instance);
+        __instance.AdjustButtonsActiveState();
+        return false;
     }
 }
 
@@ -39,16 +35,12 @@ public static class NumberOption_Decrease
     public static bool Prefix(NumberOption __instance)
     {
         if (!CheatToggles.noOptionsLimits) return true;
-        
-        if (Utils.isHideNSeek || !Utils.isHideNSeek && __instance.TitleText.text != "# Impostors" && __instance.TitleText.text != "Player Speed")
-        {
-            __instance.Value -=  __instance.Increment;
-            __instance.UpdateValue();
-            __instance.OnValueChanged.Invoke(__instance);
-            __instance.AdjustButtonsActiveState();
-            return false;
-        }
-        else return true;
+        if (!Utils.isHideNSeek && __instance.Title is StringNames.GameNumImpostors or StringNames.GamePlayerSpeed) return true;
+        __instance.Value -= __instance.Increment;
+        __instance.UpdateValue();
+        __instance.OnValueChanged.Invoke(__instance);
+        __instance.AdjustButtonsActiveState();
+        return false;
     }
 }
 
@@ -62,10 +54,7 @@ public static class NumberOption_Initialize
     public static void Postfix(NumberOption __instance)
     {
         if (!CheatToggles.noOptionsLimits) return;
-
-        if (Utils.isHideNSeek || !Utils.isHideNSeek && __instance.TitleText.text != "# Impostors" && __instance.TitleText.text != "Player Speed")
-        {
-            __instance.ValidRange = new FloatRange(-999f, 999f);
-        }
+        if (!Utils.isHideNSeek && __instance.Title is StringNames.GameNumImpostors or StringNames.GamePlayerSpeed) return;
+        __instance.ValidRange = new FloatRange(-999f, 999f);
     }
 }
