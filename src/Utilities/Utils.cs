@@ -23,8 +23,7 @@ public static class Utils
     public static bool isLocalGame => AmongUsClient.Instance && AmongUsClient.Instance.NetworkMode == NetworkModes.LocalGame;
     public static bool isFreePlay => AmongUsClient.Instance && AmongUsClient.Instance.NetworkMode == NetworkModes.FreePlay;
     public static bool isPlayer => PlayerControl.LocalPlayer;
-    // This will check the host status every time it's accessed.
-    public static bool isHost => AmongUsClient.Instance && AmongUsClient.Instance.AmHost;
+    public static bool isHost = AmongUsClient.Instance && AmongUsClient.Instance.AmHost;
     public static bool isInGame => AmongUsClient.Instance && AmongUsClient.Instance.GameState == InnerNetClient.GameStates.Started && isPlayer;
     public static bool isMeeting => MeetingHud.Instance;
     public static bool isMeetingVoting => isMeeting && MeetingHud.Instance.state is MeetingHud.VoteStates.Voted or MeetingHud.VoteStates.NotVoted;
@@ -66,8 +65,7 @@ public static class Utils
     {
         PhantomRole phantomRole = playerInfo.Role as PhantomRole;
 
-        if (phantomRole != null)
-        {
+        if (phantomRole != null){
             return phantomRole.fading || phantomRole.isInvisible;
         }
 
@@ -81,8 +79,7 @@ public static class Utils
 
         bool fullRequirements = killAnyoneRequirements && !target.IsDead && !target.Object.inVent && !target.Object.inMovingPlat && target.Role.CanBeKilled;
 
-        if (CheatToggles.killAnyone)
-        {
+        if (CheatToggles.killAnyone){
             return killAnyoneRequirements;
         }
 
@@ -92,36 +89,39 @@ public static class Utils
 
     // Adjusts HUD resolution
     // Used to fix UI problems when zooming out
-    public static void adjustResolution()
-    {
+    public static void adjustResolution() {
         ResolutionManager.ResolutionChanged.Invoke((float)Screen.width / Screen.height, Screen.width, Screen.height, Screen.fullScreen);
     }
 
     // Get RoleBehaviour from a RoleType
-    public static RoleBehaviour getBehaviourByRoleType(RoleTypes roleType)
-    {
+    public static RoleBehaviour getBehaviourByRoleType(RoleTypes roleType) {
         return RoleManager.Instance.AllRoles.First(r => r.Role == roleType);
     }
 
-    // ==================================================================
-    // [FIX 2] Replaced the body of murderPlayer.
-    // This now uses the game's standard method, which will be intercepted
-    // by your PlayerControl_CmdCheckMurder patch. This is the correct and
-    // more stable way to implement host-powered kills.
+    // Kill any player using RPC calls
     public static void murderPlayer(PlayerControl target, MurderResultFlags result)
     {
-        if (target == null) return;
+        if (isFreePlay){
 
-        PlayerControl.LocalPlayer.MurderPlayer(target, result);
+            PlayerControl.LocalPlayer.MurderPlayer(target, MurderResultFlags.Succeeded);
+            return;
+
+        }
+
+        foreach (var item in PlayerControl.AllPlayerControls)
+        {
+            MessageWriter writer = AmongUsClient.Instance.StartRpcImmediately(PlayerControl.LocalPlayer.NetId, (byte)RpcCalls.MurderPlayer, SendOption.None, AmongUsClient.Instance.GetClientIdFromCharacter(item));
+            writer.WriteNetObject(target);
+            writer.Write((int)result);
+            AmongUsClient.Instance.FinishRpcImmediately(writer);
+        }
     }
-    // ==================================================================
 
     // Report bodies using RPC calls
     public static void reportDeadBody(NetworkedPlayerInfo playerData)
     {
 
-        if (isFreePlay)
-        {
+        if (isFreePlay){
 
             PlayerControl.LocalPlayer.CmdReportDeadBody(playerData);
             return;
@@ -142,8 +142,7 @@ public static class Utils
     public static void completeMyTasks()
     {
 
-        if (isFreePlay)
-        {
+        if (isFreePlay){
 
             foreach (PlayerTask task in PlayerControl.LocalPlayer.myTasks)
             {
@@ -158,8 +157,7 @@ public static class Utils
         {
             foreach (PlayerTask task in PlayerControl.LocalPlayer.myTasks)
             {
-                if (!task.IsComplete)
-                {
+                if (!task.IsComplete){
 
                     foreach (var item in PlayerControl.AllPlayerControls)
                     {

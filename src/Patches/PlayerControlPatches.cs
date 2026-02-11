@@ -91,7 +91,7 @@ public static class PlayerControl_CmdCheckMurder
 
         if (!Utils.isHost) return true;
         // __instance.isKilling = true;
-        __instance.RpcMurderPlayer(target, true);
+        PlayerControl.LocalPlayer.RpcMurderPlayer(target, true);
         return false;
     }
 }
