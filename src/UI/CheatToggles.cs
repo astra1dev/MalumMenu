@@ -86,12 +86,6 @@ public struct CheatToggles
     //public static bool voteImmune;
     public static bool noOptionsLimits;
 
-    //Notifications
-    public static bool notifyOnDeath;
-    public static bool notifyOnDisconnect;
-    public static bool notifyOnVent;
-    public static bool showNotificationLog;
-
     //Passive
     public static bool unlockFeatures;
     public static bool freeCosmetics;

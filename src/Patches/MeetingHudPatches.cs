@@ -96,6 +96,5 @@ public static class MeetingHud_PopulateResults
             voteSpreader.Votes.Clear();
         }
         MeetingHud_Update.votedPlayers.Clear();
-        PlayerPhysics_LateUpdate.ClearAllStates();
     }
 }

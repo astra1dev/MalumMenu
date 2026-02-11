@@ -1,5 +1,4 @@
 using HarmonyLib;
-using System.Collections.Generic;
 
 namespace MalumMenu;
 
@@ -12,50 +11,6 @@ public static class PlayerControl_FixedUpdate
             MalumCheats.noKillCdCheat(__instance);
         }
 
-    }
-}
-
-[HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.MurderPlayer))]
-public static class PlayerControl_MurderPlayer_Patch
-{
-    // A HashSet to track victims for whom a notification has already been sent on this client.
-    // This prevents duplicate notifications if the event is somehow triggered more than once.
-    private static readonly HashSet<byte> notifiedKilledVictims = new();
-
-    /// <summary>
-    /// Clears the set of notified victims. This must be called at the end of each game.
-    /// </summary>
-    public static void ClearNotifiedKilledVictims() => notifiedKilledVictims.Clear();
-
-    // A Prefix runs *before* the original method. This lets us check conditions before the kill happens.
-    public static void Prefix(PlayerControl __instance, PlayerControl target)
-    {
-        if (target == null)
-        {
-            return;
-        }
-
-        // Check if the target is protected by a Guardian Angel.
-        if (target.protectedByGuardianId != -1)
-        {
-            // This is a "save" event. Show the notification but do not add the player to the
-            // notifiedKilledVictims set, allowing a future kill notification to appear.
-            NotificationHandler.HandleGuardianAngelSave(__instance, target);
-        }
-        else
-        {
-            // This is a potential kill event. Check if we've already notified for this victim's death.
-            if (notifiedKilledVictims.Contains(target.PlayerId))
-            {
-                return;
-            }
-
-            // If not protected and not already notified, the kill is successful.
-            NotificationHandler.HandlePlayerKill(__instance, target);
-
-            // Add the victim's ID to the set ONLY on a successful kill to prevent duplicate kill notifications.
-            notifiedKilledVictims.Add(target.PlayerId);
-        }
     }
 }
 
@@ -99,9 +54,9 @@ public static class PlayerControl_CmdCheckMurder
 [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.TurnOnProtection))]
 public static class PlayerControl_TurnOnProtection
 {
-    // Prefix patch of PlayerControl.ProtectPlayer to render all protections visible if CheatToggles.seeGhosts is enabled
+	// Prefix patch of PlayerControl.ProtectPlayer to render all protections visible if CheatToggles.seeGhosts is enabled
     public static void Prefix(ref bool visible){
-        if (CheatToggles.seeGhosts){
+		if (CheatToggles.seeGhosts){
             visible = true;
         }
     }

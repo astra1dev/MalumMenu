@@ -18,7 +18,6 @@ public partial class MalumMenu : BasePlugin
     public static string malumVersion = "2.5.1";
     public static List<string> supportedAU = ["2025.3.25", "2025.3.31", "2025.6.10"];
     public static MenuUI menuUI;
-    public static NotificationUI notificationUI;
     // public static ConsoleUI consoleUI;
     public static ConfigEntry<string> menuKeybind;
     public static ConfigEntry<string> menuHtmlColor;
@@ -81,7 +80,6 @@ public partial class MalumMenu : BasePlugin
         Harmony.PatchAll();
 
         menuUI = AddComponent<MenuUI>();
-        notificationUI = AddComponent<NotificationUI>();
         // consoleUI = AddComponent<ConsoleUI>();
 
         // Disable Telemetry (haven't fully tested if it works, but according to Unity docs it should)
