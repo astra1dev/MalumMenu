@@ -8,8 +8,15 @@ namespace MalumMenu;
 [HarmonyPatch(typeof(ChatController), nameof(ChatController.AddChat))]
 public static class ChatController_AddChat
 {
-	// Prefix patch of ChatController.AddChat to receive ghost messages if CheatSettings.seeGhosts is enabled even if LocalPlayer is alive
-	// Basically does what the original method did with the required modifications
+	/// <summary>
+	/// Prefix patch of ChatController.AddChat to receive ghost messages if CheatSettings.seeGhosts is enabled even if LocalPlayer is alive
+	/// Basically does what the original method did with the required modifications
+	/// </summary>
+	/// <param name="sourcePlayer">The player who sent the chat message.</param>
+	/// <param name="chatText">The chat message text.</param>
+	/// <param name="censor">Whether to censor the chat message. False only if Quick Chat is used.</param>
+	/// <param name="__instance">The <c>ChatController</c> instance.</param>
+	/// <returns><c>false</c> to skip the original method, <c>true</c> to allow the original method to run.</returns>
     public static bool Prefix(PlayerControl sourcePlayer, string chatText, bool censor, ChatController __instance)
     {
         if (!CheatToggles.seeGhosts || PlayerControl.LocalPlayer.Data.IsDead){
@@ -58,9 +65,10 @@ public static class ChatController_AddChat
 			{
 				__instance.notificationRoutine = __instance.StartCoroutine(__instance.BounceDot());
 			}
-			if (!flag)
+			if (!flag && !__instance.IsOpenOrOpening)
 			{
-				SoundManager.Instance.PlaySound(__instance.messageSound, false, 1f, null).pitch = 0.5f + (float)sourcePlayer.PlayerId / 15f;
+				SoundManager.Instance.PlaySound(__instance.messageSound, false).pitch = 0.5f + sourcePlayer.PlayerId / 15f;
+				__instance.chatNotification.SetUp(sourcePlayer, chatText);
 			}
 		}
 		catch (Exception message)
@@ -68,7 +76,7 @@ public static class ChatController_AddChat
 			ChatController.Logger.Error(message.ToString(), null);
 			__instance.chatBubblePool.Reclaim(pooledBubble);
 		}
-        
+
         return false; // Skips the original method completly
     }
 }
@@ -77,7 +85,7 @@ public static class ChatController_AddChat
 public static class ChatBubble_SetName
 {
     public static void Postfix(ChatBubble __instance){
-        MalumESP.chatNametags(__instance);
+        MalumESP.ChatNametags(__instance);
     }
 }
 
@@ -92,20 +100,24 @@ public static class ChatController_Update
         __instance.freeChatField.textArea.AllowSymbols = true; // Allow sending certain symbols
         __instance.freeChatField.textArea.AllowEmail = CheatToggles.chatJailbreak; // Allow sending email addresses when chatJailbreak is enabled
         //__instance.freeChatField.textArea.AllowPaste = CheatToggles.chatJailbreak; // Allow pasting from clipboard in chat when chatJailbreak is enabled
-        
+
         if (CheatToggles.chatJailbreak){
             __instance.freeChatField.textArea.characterLimit = 119; // Longer message length when chatJailbreak is enabled
         }else{
             __instance.freeChatField.textArea.characterLimit = 100;
         }
-        
+
     }
 }
 
 [HarmonyPatch(typeof(ChatController), nameof(ChatController.SendFreeChat))]
 public static class ChatController_SendFreeChat
 {
-    // Prefix patch of ChatController.SendFreeChat to unlock extra chat capabilities
+    /// <summary>
+    /// Prefix patch of ChatController.SendFreeChat to unlock extra chat capabilities
+    /// </summary>
+    /// <param name="__instance">The <c>ChatController</c> instance.</param>
+    /// <returns><c>false</c> to skip the original method, <c>true</c> to allow the original method to run.</returns>
     public static bool Prefix(ChatController __instance)
     {
         if (!CheatToggles.chatJailbreak){

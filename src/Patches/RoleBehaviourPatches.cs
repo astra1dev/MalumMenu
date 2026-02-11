@@ -1,9 +1,6 @@
 using HarmonyLib;
 using System.Linq;
-using System.Collections.Generic;
-using UnityEngine;
 using Sentry.Internal.Extensions;
-using AmongUs.GameOptions;
 
 namespace MalumMenu;
 
@@ -75,7 +72,11 @@ public static class PhantomRole_FixedUpdate
 [HarmonyPatch(typeof(PhantomRole), nameof(PhantomRole.IsValidTarget))]
 public static class PhantomRole_IsValidTarget
 {
-    // Prefix patch of PhantomRole.IsValidTarget to allow killing while invisible
+    /// <summary>
+    /// Postfix patch of PhantomRole.IsValidTarget to allow killing while invisible
+    /// </summary>
+    /// <param name="target">The target player info.</param>
+    /// <param name="__result">Original return value of <c>IsValidTarget</c>.</param>
     public static void Postfix(NetworkedPlayerInfo target, ref bool __result){
 
         if (CheatToggles.killVanished){
@@ -87,8 +88,12 @@ public static class PhantomRole_IsValidTarget
 [HarmonyPatch(typeof(ImpostorRole), nameof(ImpostorRole.IsValidTarget))]
 public static class ImpostorRole_IsValidTarget
 {
-    // Prefix patch of ImpostorRole.IsValidTarget to allow forbidden kill targets for killAnyone cheat
-    // Allows killing ghosts (with seeGhosts), impostors, players in vents, etc...
+    /// <summary>
+    /// Postfix patch of ImpostorRole.IsValidTarget to allow forbidden kill targets for killAnyone cheat
+    /// Allows killing ghosts (with seeGhosts), impostors, players in vents, etc...
+    /// </summary>
+    /// <param name="target">The target player info.</param>
+    /// <param name="__result">Original return value of <c>IsValidTarget</c>.</param>
     public static void Postfix(NetworkedPlayerInfo target, ref bool __result){
 
         if (CheatToggles.killAnyone){
@@ -101,19 +106,59 @@ public static class ImpostorRole_IsValidTarget
 [HarmonyPatch(typeof(ImpostorRole), nameof(ImpostorRole.FindClosestTarget))]
 public static class ImpostorRole_FindClosestTarget
 {
-    // Prefix patch of ImpostorRole.FindClosestTarget to allow for infinite kill reach
+    /// <summary>
+    /// Prefix patch of ImpostorRole.FindClosestTarget to allow for infinite kill reach
+    /// </summary>
+    /// <param name="__instance">The <c>ImpostorRole</c> instance.</param>
+    /// <param name="__result">The closest valid target.</param>
+    /// <returns><c>false</c> to skip the original method, <c>true</c> to allow the original method to run.</returns>
     public static bool Prefix(ImpostorRole __instance, ref PlayerControl __result){
+        if (!CheatToggles.killReach) return true;
+        var playerList = Utils.getPlayersSortedByDistance().Where(player => !player.IsNull() && __instance.IsValidTarget(player.Data) && player.Collider.enabled).ToList();
 
-        if (CheatToggles.killReach){
+        __result = playerList[0];
 
-            List<PlayerControl> playerList = Utils.getPlayersSortedByDistance().Where(player => !player.IsNull() && __instance.IsValidTarget(player.Data) && player.Collider.enabled).ToList();
+        return false;
 
-            __result = playerList[0];
+    }
+}
 
-            return false;
+[HarmonyPatch(typeof(DetectiveRole), nameof(DetectiveRole.FindClosestTarget))]
+public static class DetectiveRole_FindClosestTarget
+{
+    /// <summary>
+    /// Prefix patch of DetectiveRole.FindClosestTarget to allow for infinite interrogate reach
+    /// </summary>
+    /// <param name="__instance">The <c>DetectiveRole</c> instance.</param>
+    /// <param name="__result">The closest valid target.</param>
+    /// <returns><c>false</c> to skip the original method, <c>true</c> to allow the original method to run.</returns>
+    public static bool Prefix(DetectiveRole __instance, ref PlayerControl __result)
+    {
+        if (!CheatToggles.interrogateReach) return true;
+        var playerList = Utils.getPlayersSortedByDistance().Where(player => !player.IsNull() && __instance.IsValidTarget(player.Data) && player.Collider.enabled).ToList();
 
-        }
+        __result = playerList[0];
 
-        return true;
+        return false;
+    }
+}
+
+[HarmonyPatch(typeof(TrackerRole), nameof(TrackerRole.FindClosestTarget))]
+public static class TrackerRole_FindClosestTarget
+{
+    /// <summary>
+    /// Prefix patch of TrackerRole.FindClosestTarget to allow for infinite track reach
+    /// </summary>
+    /// <param name="__instance">The <c>TrackerRole</c> instance.</param>
+    /// <param name="__result">The closest valid target.</param>
+    /// <returns><c>false</c> to skip the original method, <c>true</c> to allow the original method to run.</returns>
+    public static bool Prefix(TrackerRole __instance, ref PlayerControl __result)
+    {
+        if (!CheatToggles.trackReach) return true;
+        var playerList = Utils.getPlayersSortedByDistance().Where(player => !player.IsNull() && __instance.IsValidTarget(player.Data) && player.Collider.enabled).ToList();
+
+        __result = playerList[0];
+
+        return false;
     }
 }

@@ -6,6 +6,7 @@ using UnityEngine;
 using UnityEngine.Analytics;
 using System.Collections.Generic;
 using BepInEx.Configuration;
+using BepInEx.Logging;
 using HarmonyLib;
 
 namespace MalumMenu;
@@ -15,12 +16,19 @@ namespace MalumMenu;
 public partial class MalumMenu : BasePlugin
 {
     public Harmony Harmony { get; } = new(Id);
-    public static string malumVersion = "2.5.1";
-    public static List<string> supportedAU = ["2025.3.25", "2025.3.31", "2025.6.10"];
+    public new static ManualLogSource Log;
+    public static string malumVersion = "2.6.1";
+    public static List<string> supportedAU = ["2025.9.9", "2025.10.14", "2025.11.18"];
     public static MenuUI menuUI;
     // public static ConsoleUI consoleUI;
+    public static RolesUI rolesUI;
+    public static DoorsUI doorsUI;
+    public static TasksUI tasksUI;
+    public static ProtectUI protectUI;
     public static ConfigEntry<string> menuKeybind;
     public static ConfigEntry<string> menuHtmlColor;
+    public static ConfigEntry<bool> teleportMenuToMouse;
+    public static ConfigEntry<bool> useHorizontalUI;
     public static ConfigEntry<string> spoofLevel;
     public static ConfigEntry<string> spoofPlatform;
     public static ConfigEntry<bool> spoofDeviceId;
@@ -33,6 +41,8 @@ public partial class MalumMenu : BasePlugin
 
     public override void Load()
     {
+        Log = base.Log;
+
         //Load config settings
         menuKeybind = Config.Bind("MalumMenu.GUI",
                                 "Keybind",
@@ -43,6 +53,16 @@ public partial class MalumMenu : BasePlugin
                                 "Color",
                                 "",
                                 "A custom color for your MalumMenu GUI. Supports html color codes");
+
+        teleportMenuToMouse = Config.Bind("MalumMenu.GUI",
+                                "TeleportMenuToMouse",
+                                true,
+                                "When enabled, the menu will always open at the current mouse position.");
+
+        useHorizontalUI = Config.Bind("MalumMenu.GUI",
+                                "UseHorizontalUI",
+                                false,
+                                "When enabled, use the (new) horizontal tab-based UI instead of the vertical one.");
 
         guestMode = Config.Bind("MalumMenu.GuestMode",
                                 "GuestMode",
@@ -62,7 +82,7 @@ public partial class MalumMenu : BasePlugin
         spoofPlatform = Config.Bind("MalumMenu.Spoofing",
                                 "Platform",
                                 "",
-                                "A custom gaming platform to display to others in online lobbies to hide your actual platform. List of supported platforms: https://skeld.js.org/enums/constant.Platform.html");
+                                "A custom gaming platform to display to others in online lobbies to hide your actual platform. List of supported platforms: https://skeld.js.org/enums/_skeldjs_constant.Platform.html");
 
         spoofDeviceId = Config.Bind("MalumMenu.Privacy",
                                 "HideDeviceId",
@@ -81,6 +101,11 @@ public partial class MalumMenu : BasePlugin
 
         menuUI = AddComponent<MenuUI>();
         // consoleUI = AddComponent<ConsoleUI>();
+        rolesUI = AddComponent<RolesUI>();
+        doorsUI = AddComponent<DoorsUI>();
+        tasksUI = AddComponent <TasksUI>();
+        protectUI = AddComponent<ProtectUI>();
+        AddComponent<CheatToggles.KeybindListener>().Plugin = this;
 
         // Disable Telemetry (haven't fully tested if it works, but according to Unity docs it should)
         if (noTelemetry.Value){
@@ -95,11 +120,9 @@ public partial class MalumMenu : BasePlugin
         {
             if (scene.name == "MainMenu")
             {
-                ModManager.Instance.ShowModStamp(); // Required by InnerSloth Modding Policy
-
-                //Warn about unsupported AU versions
+                // Warn about unsupported AU versions
                 if (!supportedAU.Contains(Application.version)){
-                    Utils.showPopup("\nThis version of MalumMenu and this version of Among Us are incompatible\n\nInstall the right version to avoid problems");
+                    Log.LogError("This version of MalumMenu and this version of Among Us are incompatible. Install the right version to avoid problems.");
                 }
             }
         }));

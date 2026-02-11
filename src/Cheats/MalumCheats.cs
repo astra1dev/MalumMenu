@@ -1,34 +1,79 @@
+using System.Runtime.CompilerServices;
+using AmongUs.GameOptions;
+using AmongUs.InnerNet.GameDataMessages;
 using Sentry.Internal.Extensions;
 using UnityEngine;
+using Il2CppInterop.Runtime.InteropTypes.Arrays;
 
 namespace MalumMenu;
 public static class MalumCheats
 {
     public static void closeMeetingCheat()
     {
-        if(CheatToggles.closeMeeting){
-            
-            if (MeetingHud.Instance){ // Closes MeetingHud window if it's open
+        if (!CheatToggles.closeMeeting) return;
 
-                // Destroy MeetingHud window gameobject
-                MeetingHud.Instance.DespawnOnDestroy = false;
-                Object.Destroy(MeetingHud.Instance.gameObject);
+        if (Utils.isMeeting){ // Closes MeetingHud window if it's open
 
-                // Gameplay must be reenabled
-                DestroyableSingleton<HudManager>.Instance.StartCoroutine(DestroyableSingleton<HudManager>.Instance.CoFadeFullScreen(Color.black, Color.clear, 0.2f, false));
-                PlayerControl.LocalPlayer.SetKillTimer(GameManager.Instance.LogicOptions.GetKillCooldown());
-                ShipStatus.Instance.EmergencyCooldown = GameManager.Instance.LogicOptions.GetEmergencyCooldown();
-                Camera.main.GetComponent<FollowerCamera>().Locked = false;
-                DestroyableSingleton<HudManager>.Instance.SetHudActive(true);
-                ControllerManager.Instance.CloseAndResetAll();
+            // Destroy MeetingHud window gameobject
+            MeetingHud.Instance.DespawnOnDestroy = false;
+            Object.Destroy(MeetingHud.Instance.gameObject);
 
-            }else if (ExileController.Instance != null){ // Ends exile cutscene if it's playing
-                ExileController.Instance.ReEnableGameplay();
-                ExileController.Instance.WrapUp();
-            }
-            
-            CheatToggles.closeMeeting = false; // Button behaviour
+            // Gameplay must be reenabled
+            DestroyableSingleton<HudManager>.Instance.StartCoroutine(DestroyableSingleton<HudManager>.Instance.CoFadeFullScreen(Color.black, Color.clear, 0.2f, false));
+            PlayerControl.LocalPlayer.SetKillTimer(GameManager.Instance.LogicOptions.GetKillCooldown());
+            ShipStatus.Instance.EmergencyCooldown = GameManager.Instance.LogicOptions.GetEmergencyCooldown();
+            Camera.main.GetComponent<FollowerCamera>().Locked = false;
+            DestroyableSingleton<HudManager>.Instance.SetHudActive(true);
+            ControllerManager.Instance.CloseAndResetAll();
+
+        }else if (ExileController.Instance){ // Ends exile cutscene if it's playing
+            ExileController.Instance.ReEnableGameplay();
+            ExileController.Instance.WrapUp();
         }
+
+        CheatToggles.closeMeeting = false; // Button behaviour
+    }
+
+    public static void skipMeetingCheat()
+    {
+        if (!CheatToggles.skipMeeting) return;
+
+        if (Utils.isMeeting)
+        {
+            MeetingHud.Instance.RpcVotingComplete(new Il2CppStructArray<MeetingHud.VoterState>(0L), null, true);
+        }
+
+        CheatToggles.skipMeeting = false;
+    }
+
+    public static void callMeetingCheat()
+    {
+        if (!CheatToggles.callMeeting) return;
+
+        if (Utils.isHost)
+        {
+            // Same as PlayerControl.ReportDeadBody but without additional checks
+            MeetingRoomManager.Instance.AssignSelf(PlayerControl.LocalPlayer, null);
+            DestroyableSingleton<HudManager>.Instance.OpenMeetingRoom(PlayerControl.LocalPlayer);
+            PlayerControl.LocalPlayer.RpcStartMeeting(null);
+        }
+        else
+        {
+            PlayerControl.LocalPlayer.CmdReportDeadBody(null);
+        }
+
+        CheatToggles.callMeeting = false;
+    }
+
+    public static void forceStartGameCheat()
+    {
+        if (!CheatToggles.forceStartGame) return;
+        if (Utils.isHost && Utils.isLobby)
+        {
+            AmongUsClient.Instance.SendStartGame();
+        }
+
+        CheatToggles.forceStartGame = false;
     }
 
     public static void noKillCdCheat(PlayerControl playerControl)
@@ -53,12 +98,12 @@ public static class MalumCheats
 
             // Makes vent time so incredibly long (float.MaxValue) so that it never ends
             engineerRole.inVentTimeRemaining = float.MaxValue;
-        
+
         // Vent time is reset to normal value after the cheat is disabled
         }else if (engineerRole.inVentTimeRemaining > engineerRole.GetCooldown()){
-            
+
             engineerRole.inVentTimeRemaining = engineerRole.GetCooldown();
-        
+
         }
 
         if (CheatToggles.noVentCooldown){
@@ -71,7 +116,7 @@ public static class MalumCheats
                 DestroyableSingleton<HudManager>.Instance.AbilityButton.SetCooldownFill(0f);
 
             }
-        
+
         }
     }
 
@@ -80,13 +125,13 @@ public static class MalumCheats
         if (CheatToggles.endlessSsDuration){
 
             // Makes shapeshift duration so incredibly long (float.MaxValue) so that it never ends
-            shapeshifterRole.durationSecondsRemaining = float.MaxValue; 
-            
+            shapeshifterRole.durationSecondsRemaining = float.MaxValue;
+
         // Shapeshift duration is reset to normal value after the cheat is disabled
-        }else if (shapeshifterRole.durationSecondsRemaining > GameManager.Instance.LogicOptions.GetShapeshifterDuration()){
-            
-            shapeshifterRole.durationSecondsRemaining = GameManager.Instance.LogicOptions.GetShapeshifterDuration();
-        
+        }else if (shapeshifterRole.durationSecondsRemaining > GameManager.Instance.LogicOptions.GetRoleFloat(FloatOptionNames.ShapeshifterDuration)){
+
+            shapeshifterRole.durationSecondsRemaining = GameManager.Instance.LogicOptions.GetRoleFloat(FloatOptionNames.ShapeshifterDuration);
+
         }
     }
 
@@ -104,9 +149,9 @@ public static class MalumCheats
 
         // Battery charge is reset to normal value after the cheat is disabled
         }else if (scientistRole.currentCharge > scientistRole.RoleCooldownValue){
-            
+
             scientistRole.currentCharge = scientistRole.RoleCooldownValue;
-        
+
         }
     }
 
@@ -122,10 +167,9 @@ public static class MalumCheats
 
         }
 
-        if (CheatToggles.noTrackingDelay){
-
-            MapBehaviour.Instance.trackedPointDelayTime = GameManager.Instance.LogicOptions.GetTrackerDelay();
-
+        if (CheatToggles.noTrackingDelay)
+        {
+            MapBehaviour.Instance?.trackedPointDelayTime = GameManager.Instance.LogicOptions.GetRoleFloat(FloatOptionNames.TrackerDelay);
         }
 
         if (CheatToggles.endlessTracking){
@@ -134,12 +178,13 @@ public static class MalumCheats
             trackerRole.durationSecondsRemaining = float.MaxValue;
 
         // Battery charge is reset to normal value after the cheat is disabled
-        }else if (trackerRole.durationSecondsRemaining > GameManager.Instance.LogicOptions.GetTrackerDuration()){
-            
-            trackerRole.durationSecondsRemaining = GameManager.Instance.LogicOptions.GetTrackerDuration();
-        
+        }else if (trackerRole.durationSecondsRemaining > GameManager.Instance.LogicOptions.GetRoleFloat(FloatOptionNames.TrackerDuration)){
+
+            trackerRole.durationSecondsRemaining = GameManager.Instance.LogicOptions.GetRoleFloat(FloatOptionNames.TrackerDuration);
+
         }
     }
+
     public static void phantomCheats(PhantomRole phantomRole)
     {
         return;
@@ -162,125 +207,133 @@ public static class MalumCheats
 
     public static void sabotageCheat(ShipStatus shipStatus)
     {
-        byte currentMapID = Utils.getCurrentMapID();
+        var currentMapID = Utils.getCurrentMapID();
 
         // Handle all sabotage systems
-        MalumSabotageSystem.handleReactor(shipStatus, currentMapID);
-        MalumSabotageSystem.handleOxygen(shipStatus, currentMapID);
-        MalumSabotageSystem.handleComms(shipStatus, currentMapID);
-        MalumSabotageSystem.handleElectrical(shipStatus, currentMapID);
-        MalumSabotageSystem.handleMushMix(shipStatus, currentMapID);
-        MalumSabotageSystem.handleDoors(shipStatus);
+        MalumSabotageSystem.HandleReactor(shipStatus, currentMapID);
+        MalumSabotageSystem.HandleOxygen(shipStatus, currentMapID);
+        MalumSabotageSystem.HandleComms(shipStatus, currentMapID);
+        MalumSabotageSystem.HandleElectrical(shipStatus, currentMapID);
+        MalumSabotageSystem.HandleMushMix(shipStatus, currentMapID);
+        MalumSabotageSystem.HandleDoors(shipStatus);
+        MalumSabotageSystem.OpenSabotageMap();
+    }
+
+    public static void fungleSabotageCheat(FungleShipStatus shipStatus)
+    {
+        var currentMapID = Utils.getCurrentMapID();
+
+        MalumSabotageSystem.HandleSpores(shipStatus, currentMapID);
     }
 
     public static void walkInVentCheat()
     {
-        try{
+        try
+        {
+            if (!CheatToggles.walkVent) return;
 
-            if (CheatToggles.walkVent){
-                PlayerControl.LocalPlayer.inVent = false;
-                PlayerControl.LocalPlayer.moveable = true;
-            }
-
+            PlayerControl.LocalPlayer.inVent = false;
+            PlayerControl.LocalPlayer.moveable = true;
         }catch{}
     }
 
     public static void kickVentsCheat()
     {
-        if (CheatToggles.kickVents){
+        if (!CheatToggles.kickVents) return;
 
-            foreach(var vent in ShipStatus.Instance.AllVents){
-
-                VentilationSystem.Update(VentilationSystem.Operation.BootImpostors, vent.Id);
-
-            }
-
-            CheatToggles.kickVents = false; // Button behaviour
+        foreach(var vent in ShipStatus.Instance.AllVents)
+        {
+            VentilationSystem.Update(VentilationSystem.Operation.BootImpostors, vent.Id);
         }
+
+        CheatToggles.kickVents = false; // Button behaviour
     }
 
     public static void killAllCheat()
     {
-        if (CheatToggles.killAll){
+        if (!CheatToggles.killAll) return;
 
-            if (Utils.isLobby){
-
-                HudManager.Instance.Notifier.AddDisconnectMessage("Killing in lobby disabled for being too buggy");
-
-            }else{
-
-                // Kill all players by sending a successful MurderPlayer RPC call
-                foreach (var player in PlayerControl.AllPlayerControls)
-                {
-                    Utils.murderPlayer(player, MurderResultFlags.Succeeded);
-                }
-
-            }
-
-            CheatToggles.killAll = false;
-
+        if (Utils.isLobby)
+        {
+            HudManager.Instance.Notifier.AddDisconnectMessage("Killing in lobby disabled for being too buggy");
         }
+        else
+        {
+            // Kill all players by sending a successful MurderPlayer RPC call
+            foreach (var player in PlayerControl.AllPlayerControls)
+            {
+                Utils.murderPlayer(player, MurderResultFlags.Succeeded);
+            }
+        }
+
+        CheatToggles.killAll = false;
     }
 
     public static void killAllCrewCheat()
     {
-        if (CheatToggles.killAllCrew){
+        if (!CheatToggles.killAllCrew) return;
 
-            if (Utils.isLobby){
-
-                HudManager.Instance.Notifier.AddDisconnectMessage("Killing in lobby disabled for being too buggy");
-
-            }else{
-
-                // Kill all players by sending a successful MurderPlayer RPC call
-                foreach (var player in PlayerControl.AllPlayerControls)
-                {
-                    if (player.Data.Role.TeamType == RoleTeamTypes.Crewmate){
-                        Utils.murderPlayer(player, MurderResultFlags.Succeeded);
-                    }
-                }
-
-            }
-
-            CheatToggles.killAllCrew = false;
-
+        if (Utils.isLobby)
+        {
+            HudManager.Instance.Notifier.AddDisconnectMessage("Killing in lobby disabled for being too buggy");
         }
+        else
+        {
+            // Kill all players by sending a successful MurderPlayer RPC call
+            foreach (var player in PlayerControl.AllPlayerControls)
+            {
+                if (player.Data.Role.TeamType == RoleTeamTypes.Crewmate){
+                    Utils.murderPlayer(player, MurderResultFlags.Succeeded);
+                }
+            }
+        }
+
+        CheatToggles.killAllCrew = false;
     }
 
     public static void killAllImpsCheat()
     {
-        if (CheatToggles.killAllImps){
+        if (!CheatToggles.killAllImps) return;
 
-            if (Utils.isLobby){
-
-                HudManager.Instance.Notifier.AddDisconnectMessage("Killing in lobby disabled for being too buggy");
-
-            }else{
-
-                // Kill all players by sending a successful MurderPlayer RPC call
-                foreach (var player in PlayerControl.AllPlayerControls)
-                {
-                    if (player.Data.Role.TeamType == RoleTeamTypes.Impostor){
-                        Utils.murderPlayer(player, MurderResultFlags.Succeeded);
-                    }
+        if (Utils.isLobby)
+        {
+            HudManager.Instance.Notifier.AddDisconnectMessage("Killing in lobby disabled for being too buggy");
+        }
+        else
+        {
+            // Kill all players by sending a successful MurderPlayer RPC call
+            foreach (var player in PlayerControl.AllPlayerControls)
+            {
+                if (player.Data.Role.TeamType == RoleTeamTypes.Impostor){
+                    Utils.murderPlayer(player, MurderResultFlags.Succeeded);
                 }
-
             }
+        }
 
-            CheatToggles.killAllImps = false;
+        CheatToggles.killAllImps = false;
+    }
 
+    public static void ProtectCheat()
+    {
+        if (!Utils.isHost || Utils.isLobby) return;
+        foreach (var pc in ProtectUI.playersToProtect)
+        {
+            if (pc.protectedByGuardianId == -1) // -1 means no protection is currently active
+            {
+                //PlayerControl.LocalPlayer.TurnOnProtection(true, PlayerControl.LocalPlayer.cosmetics.ColorId, PlayerControl.LocalPlayer.PlayerId);
+                PlayerControl.LocalPlayer.RpcProtectPlayer(pc, PlayerControl.LocalPlayer.cosmetics.ColorId);
+            }
         }
     }
 
     public static void teleportCursorCheat()
     {
-        if (CheatToggles.teleportCursor)
+        if (!CheatToggles.teleportCursor) return;
+
+        // Teleport player to cursor's in-world position on right-click
+        if (Input.GetMouseButtonDown(1))
         {
-            // Teleport player to cursor's in-world position on right-click
-            if (Input.GetMouseButtonDown(1)) 
-            {
-                PlayerControl.LocalPlayer.NetTransform.RpcSnapTo(Camera.main.ScreenToWorldPoint(Input.mousePosition));
-            }
+            PlayerControl.LocalPlayer.NetTransform.RpcSnapTo(Camera.main.ScreenToWorldPoint(Input.mousePosition));
         }
     }
 
@@ -295,8 +348,6 @@ public static class MalumCheats
 
     public static void speedBoostCheat()
     {
-        const float defaultSpeed = 2.5f;
-        const float defaultGhostSpeed = 3f;
         const float speedMultiplier = 2.0f;
 
         try
@@ -304,21 +355,119 @@ public static class MalumCheats
             // If the speedBoost cheat is enabled, the default speed is multiplied by the speed multiplier
             // Otherwise the default speed is used by itself
 
-            float newSpeed = CheatToggles.speedBoost ? defaultSpeed * speedMultiplier : defaultSpeed;
+            var newSpeed = CheatToggles.speedBoost ? Utils.DefaultSpeed * speedMultiplier : Utils.DefaultSpeed;
 
-            float newGhostSpeed = CheatToggles.speedBoost ? defaultGhostSpeed * speedMultiplier : defaultGhostSpeed;
+            var newGhostSpeed = CheatToggles.speedBoost ? Utils.DefaultGhostSpeed * speedMultiplier : Utils.DefaultGhostSpeed;
 
             PlayerControl.LocalPlayer.MyPhysics.Speed = newSpeed;
             PlayerControl.LocalPlayer.MyPhysics.GhostSpeed = newGhostSpeed;
-        }
-        catch{}
+        }catch{}
     }
 
-    public static void reviveCheat()
+    public static void ReviveCheat()
     {
         if (!CheatToggles.revive) return;
 
         PlayerControl.LocalPlayer.Revive();
         CheatToggles.revive = false;
+    }
+
+    private static bool _hasUsedScanCheatBefore;
+
+    private static void ForceSetScanner(PlayerControl player, bool toggle)
+    {
+        var count = ++player.scannerCount;
+        player.SetScanner(toggle, count);
+        RpcSetScannerMessage rpcMessage = new(player.NetId, toggle, count);
+        AmongUsClient.Instance.LateBroadcastReliableMessage(Unsafe.As<IGameDataMessage>(rpcMessage));
+    }
+
+    public static void ScanCheat()
+    {
+        if (CheatToggles.animScan && !_hasUsedScanCheatBefore)
+        {
+            ForceSetScanner(PlayerControl.LocalPlayer, true);
+            _hasUsedScanCheatBefore = true;
+        }
+        else if (!CheatToggles.animScan && _hasUsedScanCheatBefore)
+        {
+            ForceSetScanner(PlayerControl.LocalPlayer, false);
+            _hasUsedScanCheatBefore = false;
+        }
+    }
+
+    private static void ForcePlayAnimation(byte animationType)
+    {
+        // PlayerControl.LocalPlayer.RpcPlayAnimation(1); wouldn't work if visual tasks are turned off
+        // The below way makes sure it works regardless of visual task settings
+
+        PlayerControl.LocalPlayer.PlayAnimation(animationType);
+        RpcPlayAnimationMessage rpcMessage = new(PlayerControl.LocalPlayer.NetId, animationType);
+        AmongUsClient.Instance.LateBroadcastUnreliableMessage(Unsafe.As<IGameDataMessage>(rpcMessage));
+    }
+
+    private static bool _hasUsedCamsCheatBefore;
+
+    public static void AnimationCheat()
+    {
+        var map = (MapNames)Utils.getCurrentMapID();
+
+        if (CheatToggles.animShields)
+        {
+            if (map is MapNames.Skeld or MapNames.Dleks)
+            {
+                ForcePlayAnimation((byte)TaskTypes.PrimeShields);
+            }
+            CheatToggles.animShields = false;
+        }
+        if (CheatToggles.animAsteroids)
+        {
+            if (map is MapNames.Skeld or MapNames.Dleks or MapNames.Polus)
+            {
+                ForcePlayAnimation((byte)TaskTypes.ClearAsteroids);
+            }
+            else
+            {
+                CheatToggles.animAsteroids = false;
+            }
+        }
+        if (CheatToggles.animEmptyGarbage)
+        {
+            if (map is MapNames.Skeld or MapNames.Dleks)
+            {
+                ForcePlayAnimation((byte)TaskTypes.EmptyGarbage);
+            }
+            CheatToggles.animEmptyGarbage = false;
+        }
+
+        if (CheatToggles.animCamsInUse && !_hasUsedCamsCheatBefore)
+        {
+            // There is no cameras on Mira HQ and Fungle
+            if (map is MapNames.MiraHQ or MapNames.Fungle)
+            {
+                CheatToggles.animCamsInUse = false;
+            }
+            else
+            {
+                // ShipStatus.Instance.UpdateSystem(SystemTypes.Security, PlayerControl.LocalPlayer, (byte)(CheatToggles.animCamsInUse ? 1 : 0));
+                ShipStatus.Instance.RpcUpdateSystem(SystemTypes.Security, 1);
+                _hasUsedCamsCheatBefore = true;
+            }
+        }
+        else if (!CheatToggles.animCamsInUse && _hasUsedCamsCheatBefore)
+        {
+            // Turn off cams if the cheat was used before and is now disabled
+            ShipStatus.Instance.RpcUpdateSystem(SystemTypes.Security, 0);
+            _hasUsedCamsCheatBefore = false;
+        }
+
+        if (CheatToggles.animPet && Utils.isPlayer && PlayerControl.LocalPlayer.cosmetics != null && PlayerControl.LocalPlayer.cosmetics.CurrentPet != null)
+        {
+            // Don't move the local player, just send the RPC so others see the petting animation.
+            RpcPetMessage rpcMessage = new(PlayerControl.LocalPlayer.MyPhysics.NetId,
+                PlayerControl.LocalPlayer.cosmetics.CurrentPet.PettingPlayerPosition,
+                PlayerControl.LocalPlayer.cosmetics.CurrentPet.transform.position);
+            AmongUsClient.Instance.LateBroadcastReliableMessage(Unsafe.As<IGameDataMessage>(rpcMessage));
+        }
     }
 }
