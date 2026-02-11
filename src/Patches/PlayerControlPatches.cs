@@ -99,7 +99,10 @@ public static class PlayerControl_CmdCheckMurder
 [HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.TurnOnProtection))]
 public static class PlayerControl_TurnOnProtection
 {
-    // Prefix patch of PlayerControl.ProtectPlayer to render all protections visible if CheatToggles.seeGhosts is enabled
+    /// <summary>
+    /// Prefix patch of PlayerControl.TurnOnProtection to render all protections visible if CheatToggles.seeGhosts is enabled
+    /// </summary>
+    /// <param name="visible">Whether the protection should be visible.</param>
     public static void Prefix(ref bool visible){
         if (CheatToggles.seeGhosts){
             visible = true;
