@@ -1,38 +1,52 @@
 using UnityEngine;
 
 namespace MalumMenu;
+
 public static class TracersHandler
 {
-    public static void drawPlayerTracer(PlayerPhysics playerPhysics){
-        try{
+    /// <summary>
+    /// Draws a tracer from the local player to another player.
+    /// </summary>
+    /// <param name="playerPhysics">The <c>PlayerPhysics</c> of the target player.</param>
+    public static void DrawPlayerTracer(PlayerPhysics playerPhysics)
+    {
+        try
+        {
+            var color = Color.clear; // All tracers are invisible by default
 
-            Color color = Color.clear; // All tracers are invisible by default
-
-            if (!playerPhysics.myPlayer.Data.IsDead){
-                if (CheatToggles.tracersCrew && !playerPhysics.myPlayer.Data.Role.IsImpostor){
-                    if (CheatToggles.distanceBasedTracers){
+            if (!playerPhysics.myPlayer.Data.IsDead)
+            {
+                if (CheatToggles.tracersCrew && !playerPhysics.myPlayer.Data.Role.IsImpostor ||
+                    CheatToggles.tracersImps && playerPhysics.myPlayer.Data.Role.IsImpostor)
+                {
+                    if (CheatToggles.distanceBasedTracers)
+                    {
                         color = GetDistanceBasedColor(playerPhysics.myPlayer.transform.position);
-                    }else if (CheatToggles.colorBasedTracers){
-                        color = playerPhysics.myPlayer.Data.Color; // Color-Based Tracer
-                    }else{
-                        color = playerPhysics.myPlayer.Data.Role.TeamColor; // Team-Based Tracer
                     }
-                }else if (CheatToggles.tracersImps && playerPhysics.myPlayer.Data.Role.IsImpostor){
-                    if (CheatToggles.distanceBasedTracers){
-                        color = GetDistanceBasedColor(playerPhysics.myPlayer.transform.position);
-                    }else if (CheatToggles.colorBasedTracers){
+                    else if (CheatToggles.colorBasedTracers)
+                    {
                         color = playerPhysics.myPlayer.Data.Color; // Color-Based Tracer
-                    }else{
+                    }
+                    else
+                    {
                         color = playerPhysics.myPlayer.Data.Role.TeamColor; // Team-Based Tracer
                     }
                 }
-            }else{
-                if (CheatToggles.tracersGhosts){
-                    if (CheatToggles.distanceBasedTracers){
+            }
+            else
+            {
+                if (CheatToggles.tracersGhosts)
+                {
+                    if (CheatToggles.distanceBasedTracers)
+                    {
                         color = GetDistanceBasedColor(playerPhysics.myPlayer.transform.position);
-                    }else if (CheatToggles.colorBasedTracers){
+                    }
+                    else if (CheatToggles.colorBasedTracers)
+                    {
                         color = playerPhysics.myPlayer.Data.Color; // Color-Based Tracer
-                    }else{
+                    }
+                    else
+                    {
                         color = Palette.White; // Ghost Tracer (White)
                     }
                 }
@@ -40,27 +54,30 @@ public static class TracersHandler
 
             // Draw tracer between the player and LocalPlayer using the right color
             Utils.drawTracer(playerPhysics.myPlayer.gameObject, PlayerControl.LocalPlayer.gameObject, color);
-
         }catch{}
     }
 
-    public static void drawBodyTracer(DeadBody deadBody){
-        Color color = Color.clear; // All tracers are invisible by default
+    /// <summary>
+    /// Draws a tracer from the local player to a dead body. Only draws tracers for unreported dead bodies.
+    /// </summary>
+    /// <param name="deadBody">The <c>DeadBody</c> to draw a tracer to.</param>
+    public static void DrawBodyTracer(DeadBody deadBody)
+    {
+        var color = Color.clear; // All tracers are invisible by default
 
-        if (CheatToggles.tracersBodies){
-            if (CheatToggles.distanceBasedTracers){
+        if (CheatToggles.tracersBodies)
+        {
+            if (CheatToggles.distanceBasedTracers)
+            {
                 color = GetDistanceBasedColor(deadBody.transform.position);
-            }else if (CheatToggles.colorBasedTracers){
-
-                // Fetch the dead body's PlayerInfo
-                NetworkedPlayerInfo playerById = GameData.Instance.GetPlayerById(deadBody.ParentId);
-
-                color = playerById.Color; // Color-Based Tracer
-
-            }else{
-
+            }
+            else if (CheatToggles.colorBasedTracers)
+            {
+                color = GameData.Instance.GetPlayerById(deadBody.ParentId).Color; // Color-Based Tracer
+            }
+            else
+            {
                 color = Color.yellow; // Dead Body Tracer (Yellow)
-
             }
         }
 
@@ -68,35 +85,23 @@ public static class TracersHandler
         Utils.drawTracer(deadBody.gameObject, PlayerControl.LocalPlayer.gameObject, color);
     }
 
-    // Red-Yellow-Green cycle: Red = close, Yellow = medium, Green = far
+    /// <summary>
+    /// Gets a color based on the distance between the local player and a target position.
+    /// Closer distances are red, medium distances are yellow, and farther distances are green.
+    /// </summary>
+    /// <param name="targetPosition">The position to calculate the distance from.</param>
+    /// <returns>A Color that represents the distance (red for close, yellow for medium, green for far).</returns>
     private static Color GetDistanceBasedColor(Vector3 targetPosition)
     {
-        float distance = Vector3.Distance(targetPosition, PlayerControl.LocalPlayer.transform.position);
+        const float maxDistance = 20f; // Green at 20+ units
+        const float minDistance = 2f;  // Red at 2 units or fewer
 
-        float maxDistance = 20f; // Green at 20+ units
-        float minDistance = 2f;  // Red at 2 units or less
+        var distance = Vector3.Distance(targetPosition, PlayerControl.LocalPlayer.transform.position);
+        var normalized = Mathf.InverseLerp(minDistance, maxDistance, distance);
 
-        distance = Mathf.Clamp(distance, minDistance, maxDistance);
-
-        float normalized = (distance - minDistance) / (maxDistance - minDistance);
-
-        float r;
-        float g;
-        float b = 0f;
-
-        if (normalized < 0.5f)
-        {
-            float t = normalized * 2f;
-            r = 1f;
-            g = t;
-        }
-        else
-        {
-            float t = (normalized - 0.5f) * 2f;
-            r = 1f - t;
-            g = 1f;
-        }
-
-        return new Color(r, g, b, 1f);
+        // Interpolate: Red (close) -> Yellow (medium) -> Green (far)
+        return normalized < 0.5f
+            ? Color.Lerp(Color.red, Color.yellow, normalized * 2f)
+            : Color.Lerp(Color.yellow, Color.green, (normalized - 0.5f) * 2f);
     }
 }
