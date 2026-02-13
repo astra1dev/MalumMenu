@@ -479,5 +479,6 @@ public static class MalumCheats
         {
 			PlayerControl.LocalPlayer.CmdReportDeadBody(null);
         }
+		CheatToggles.closeGame = false;
     }
 }
