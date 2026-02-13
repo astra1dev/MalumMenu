@@ -87,6 +87,7 @@ public struct CheatToggles
     public static bool logVents;
 
     //Ship
+    public static bool closeGame;
     public static bool closeMeeting;
     public static bool sabotageMap;
     public static bool openAllDoors;
