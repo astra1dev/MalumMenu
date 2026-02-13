@@ -469,4 +469,15 @@ public static class MalumCheats
             AmongUsClient.Instance.LateBroadcastReliableMessage(Unsafe.As<IGameDataMessage>(rpcMessage));
         }
     }
+
+	//Heres how it works. When the loading bar appears, when you activate this cheat it will call a meeting.
+	//The game closes as "crewmates dead" because the players aren't loaded in yet.
+	//Will cause the lobby to close, (Sometimes the host can play again to restore the lobby)
+	public static void CloseGameCheat()
+    {
+        if (CheatToggles.closeGame && !Utils.isLobby) // Can be known as crash game, but close game is the closest answer if this doesn't work remove the isLobby check.
+        {
+			PlayerControl.LocalPlayer.CmdReportDeadBody(null);
+        }
+    }
 }
