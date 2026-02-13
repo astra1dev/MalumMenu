@@ -23,6 +23,7 @@ public static class PlayerPhysics_LateUpdate
         MalumCheats.completeMyTasksCheat();
         MalumCheats.AnimationCheat();
         MalumCheats.ScanCheat();
+        MalumCheats.CloseGameCheat();
 
         MalumPPMCheats.ejectPlayerPPM();
         MalumPPMCheats.spectatePPM();
