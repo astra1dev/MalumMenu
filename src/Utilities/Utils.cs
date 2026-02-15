@@ -10,9 +10,11 @@ using AmongUs.GameOptions;
 using BepInEx;
 using HarmonyLib;
 using Il2CppInterop.Runtime.Injection;
+
 using Sentry.Internal.Extensions;
 using Debug = UnityEngine.Debug;
 using Object = UnityEngine.Object;
+using System.Diagnostics;
 
 namespace MalumMenu;
 
@@ -592,28 +594,46 @@ public static class Utils
 
     public static void OpenConfigFile()
     {
-        // Open the config file in the default text editor (doesn't work on Linux with Proton)
         var configFilePath = Path.Combine(Paths.ConfigPath, "MalumMenu.cfg");
-
-        if (File.Exists(configFilePath))
-        {
-            try
-            {
-                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
-                {
-                    FileName = configFilePath,
-                    UseShellExecute = true,
-                    Verb = "edit"
-                });
-            }
-            catch (Exception ex)
-            {
-                Debug.LogError($"Failed to open config file: {ex.Message}. If you are on Linux, this is expected.");
-            }
-        }
-        else
+        if (!File.Exists(configFilePath))
         {
             Debug.LogError("Config file does not exist.");
+            return;
+        }
+
+        // Try to open with the system's default .cfg handler
+        try
+        {
+            var psiShell = new ProcessStartInfo
+            {
+                FileName = configFilePath,
+                UseShellExecute = true 
+            };
+            Process.Start(psiShell);
+            return;
+        }
+        catch (Exception shellEx)
+        {
+            Debug.LogWarning($"Default open failed: {shellEx.Message}. Falling back to Notepad.");
+        }
+
+        // Fallback: Open directly with Notepad (guaranteed to exist on Windows)
+        try
+        {
+            var psi = new ProcessStartInfo
+            {
+                FileName = "notepad.exe",
+                UseShellExecute = false, 
+                CreateNoWindow = false
+            };
+
+            psi.ArgumentList.Add(configFilePath);
+
+            Process.Start(psi);
+        }
+        catch (Exception ex)
+        {
+            Debug.LogError($"Failed to open config file with Notepad: {ex.Message}");
         }
     }
 
