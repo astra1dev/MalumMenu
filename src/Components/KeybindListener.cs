@@ -1,4 +1,6 @@
 using UnityEngine;
+using UniverseLib;
+using UniverseLib.UI;
 
 namespace MalumMenu;
 
@@ -21,6 +23,13 @@ public class KeybindListener : MonoBehaviour
 
             var current = (bool)field.GetValue(null);
             field.SetValue(null, !current);
+        }
+
+        if (Input.GetKeyDown(Utils.StringToKeycode(MalumMenu.menuKeybind.Value)))
+        {
+            // Enable or disable GUI with DELETE key
+            //UniversalUI.SetUIActive("com.scp222thj.MalumMenu", true);
+            MalumMenu.UIBase.Enabled = !MalumMenu.UIBase.Enabled;
         }
     }
 }

@@ -9,6 +9,10 @@ using System.Collections.Generic;
 using BepInEx.Configuration;
 using BepInEx.Logging;
 using HarmonyLib;
+using UnityEngine.UI;
+using UniverseLib;
+using UniverseLib.UI;
+using UniverseLib.UI.Models;
 
 namespace MalumMenu;
 
@@ -53,6 +57,8 @@ public partial class MalumMenu : BasePlugin
     public static ConfigEntry<int> defaultStrength;
     public static ConfigEntry<float> defaultCooldown;
     public static ConfigEntry<int> killSwitchLvl;
+
+    public static UIBase UIBase { get; private set; }
 
     public override void Load()
     {
@@ -185,7 +191,7 @@ public partial class MalumMenu : BasePlugin
         Harmony.PatchAll();
 
         // UI
-        menuUI = AddComponent<MenuUI>();
+        //menuUI = AddComponent<MenuUI>();
         consoleUI = AddComponent<ConsoleUI>();
         doorsUI = AddComponent<DoorsUI>();
         tasksUI = AddComponent<TasksUI>();
@@ -227,5 +233,165 @@ public partial class MalumMenu : BasePlugin
                 }
             }
         }));
+
+        float startupDelay = 1f;
+        UniverseLib.Config.UniverseLibConfig config = new() {};
+        Universe.Init(startupDelay, OnInitialized, LogHandler, config);
+    }
+
+    void OnInitialized()
+    {
+        UIBase = UniversalUI.RegisterUI("com.scp222thj.MalumMenu", UiUpdate);
+        MainUIPanel mainUIPanel = new(UIBase);
+    }
+
+    void LogHandler(string message, LogType log) { }
+
+    void UiUpdate() { }
+
+    public class MovementTab : UIModel
+    {
+        public MainUIPanel Parent { get; }
+
+        public MovementTab(MainUIPanel parent)
+        {
+            Parent = parent;
+        }
+
+        public override GameObject UIRoot => uiRoot;
+        private GameObject uiRoot;
+
+        public override void ConstructUI(GameObject content)
+        {
+            uiRoot = UIFactory.CreateUIObject("MovementTab", content);
+        }
+
+        public void Update(){}
+    }
+
+    public class ESPTab : UIModel
+    {
+        public MainUIPanel Parent { get; }
+
+        public ESPTab(MainUIPanel parent)
+        {
+            Parent = parent;
+        }
+
+        public override GameObject UIRoot => uiRoot;
+        private GameObject uiRoot;
+
+        public override void ConstructUI(GameObject parent)
+        {
+            //uiRoot = UIFactory.CreateVerticalGroup(parent, "ObjectSearch", true, true, true, true, 2, new Vector4(2, 2, 2, 2));
+            //UIFactory.SetLayoutElement(uiRoot, flexibleHeight: 9999);
+        }
+
+        public void Update(){}
+    }
+
+    public class MainUIPanel : UniverseLib.UI.Panels.PanelBase
+    {
+        public MainUIPanel(UIBase owner) : base(owner) { }
+
+        public override string Name => $"MalumMenu v{malumVersion} by scp222thj & Astral";
+        public override int MinWidth => 100;
+        public override int MinHeight => 200;
+        public override Vector2 DefaultAnchorMin => new(0.25f, 0.25f);
+        public override Vector2 DefaultAnchorMax => new(0.75f, 0.75f);
+        public override bool CanDragAndResize => true;
+
+        private readonly List<UIModel> tabPages = new();
+        private readonly List<ButtonRef> tabButtons = new();
+        public int SelectedTab = 0;
+
+        public MovementTab MovementTab;
+        public ESPTab ESPTab;
+
+        protected override void ConstructPanelContent()
+        {
+            GameObject tabGroup = UIFactory.CreateVerticalGroup(ContentRoot, "TabBar", false, false, true, true, 2,
+                new Vector4(2, 2, 2, 2));
+            UIFactory.SetLayoutElement(tabGroup, minHeight: 25, flexibleHeight: 0);
+
+            ButtonRef movementTabButton = UIFactory.CreateButton(tabGroup, $"Button_Movement", "Movement", new Color(30, 30, 42));
+            UIFactory.SetLayoutElement(movementTabButton.Component.gameObject, minHeight: 23, flexibleHeight: 0, minWidth: 100);
+
+            ButtonRef espTabButton = UIFactory.CreateButton(tabGroup, $"Button_ESP", "ESP");
+            UIFactory.SetLayoutElement(espTabButton.Component.gameObject, minHeight: 23, flexibleHeight: 0, minWidth: 100);
+
+            ButtonRef rolesTabButton = UIFactory.CreateButton(tabGroup, $"Button_Roles", "Roles");
+            UIFactory.SetLayoutElement(rolesTabButton.Component.gameObject, minHeight: 23, flexibleHeight: 0, minWidth: 100);
+/*
+            MovementTab = new MovementTab(this);
+            MovementTab.ConstructUI(ContentRoot);
+            tabPages.Add(MovementTab);
+
+            ESPTab = new ESPTab(this);
+            ESPTab.ConstructUI(ContentRoot);
+            tabPages.Add(ESPTab);
+
+            AddTabButton(tabGroup, "Host-Only");
+            AddTabButton(tabGroup, "Modes");
+            AddTabButton(tabGroup, "Config");*/
+
+            Text myText = UIFactory.CreateLabel(ContentRoot, "myText", "Hello world");
+
+            InputFieldRef searchField = UIFactory.CreateInputField(ContentRoot, "searchField", "Search...");
+            UIFactory.SetLayoutElement(searchField.Component.gameObject, minWidth: 200, minHeight: 25);
+
+            UIFactory.CreateSlider(ContentRoot, "mySlider", out var mySlider);
+            mySlider.m_MaxValue = 100f;
+            mySlider.m_MinValue = 0f;
+
+            UIFactory.CreateToggle(ContentRoot, "myToggle", out var myToggle, out var myText2);
+            myText2.text = "hi uwu~";
+
+            UIFactory.SetLayoutElement(myText.gameObject, minWidth: 200, minHeight: 25);
+        }
+
+        private void DisableTab(int tabIndex)
+        {
+            tabPages[tabIndex].SetActive(false);
+            RuntimeHelper.SetColorBlock(tabButtons[tabIndex].Component, UniversalUI.DisabledButtonColor, UniversalUI.DisabledButtonColor * 1.2f);
+        }
+
+        public void SetTab(int tabIndex)
+        {
+            if (SelectedTab != -1)
+                DisableTab(SelectedTab);
+
+            UIModel content = tabPages[tabIndex];
+            content.SetActive(true);
+
+            ButtonRef button = tabButtons[tabIndex];
+            RuntimeHelper.SetColorBlock(button.Component, UniversalUI.EnabledButtonColor, UniversalUI.EnabledButtonColor * 1.2f);
+
+            SelectedTab = tabIndex;
+            //SaveInternalData();
+        }
+
+        void AddTabButton(GameObject tabGroup, string label)
+        {
+            ButtonRef button = UIFactory.CreateButton(tabGroup, $"Button_{label}", label);
+
+            int idx = tabButtons.Count;
+            //button.onClick.AddListener(() => { SetTab(idx); });
+            button.OnClick += () => { SetTab(idx); };
+
+            tabButtons.Add(button);
+
+            DisableTab(tabButtons.Count - 1);
+        }
+
+        /*public override void Update()
+        {
+            if (SelectedTab == 0)
+                MovementTab.Update();
+            else
+                ESPTab.Update();
+        }*/
+
+        // override other methods as desired
     }
 }
