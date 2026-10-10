@@ -208,7 +208,7 @@ public static class Utils
     // Draws a tracer line between two GameObjects
     public static void DrawTracer(GameObject sourceObject, GameObject targetObject, Color color)
     {
-        var lineRenderer = sourceObject.GetComponent<LineRenderer>();
+        /*var lineRenderer = sourceObject.GetComponent<LineRenderer>();
 
         if (!lineRenderer)
         {
@@ -225,7 +225,17 @@ public static class Utils
         lineRenderer.SetColors(color, color);
 
         lineRenderer.SetPosition(0, sourceObject.transform.position);
-        lineRenderer.SetPosition(1, targetObject.transform.position);
+        lineRenderer.SetPosition(1, targetObject.transform.position);*/
+
+		GL.PushMatrix();
+        //overlayMaterial.SetPass(0);
+        GL.LoadPixelMatrix(0f, (float)Screen.width, (float)Screen.height, 0f);
+        GL.Begin(2);
+        GL.Color(color);
+        GL.Vertex(new Vector3(sourceObject.transform.position.x, sourceObject.transform.position.y));
+        GL.Vertex(new Vector3(targetObject.transform.position.x, targetObject.transform.position.y));
+        GL.End();
+        GL.PopMatrix();
     }
 
     // Returns whether the ChatUI should be active or not
