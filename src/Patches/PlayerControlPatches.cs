@@ -1,6 +1,8 @@
 using HarmonyLib;
 using Il2CppSystem;
 using UnityEngine;
+using Object = UnityEngine.Object;
+using TMPro;
 
 namespace MalumMenu;
 
@@ -181,5 +183,59 @@ public static class PlayerControl_RpcSyncSettings
     public static bool Prefix(PlayerControl __instance, byte[] optionsByteArray)
     {
         return !CheatToggles.noOptionsLimits;
+    }
+}
+
+[HarmonyPatch(typeof(PlayerControl), nameof(PlayerControl.Start))]
+public static class PlayerControl_Start
+{
+    public static GameObject LevelIcon;
+    public static GameObject IdIcon;
+    public static GameObject HostIcon;
+
+    public static void Postfix(PlayerControl __instance)
+    {
+        // from https://github.com/WanderingPix/Host-Utility/blob/auos-api/HostUtility/Components/PlayerIconsBehaviour.cs
+
+        var iconContainer = new GameObject("IconContainer");
+        iconContainer.transform.SetParent(__instance.cosmetics.nameTextContainer.transform);
+        iconContainer.transform.localPosition = __instance.cosmetics.nameText.transform.localPosition; // + new Vector3(0, 0.35f, 0);
+        //__instance.StartCoroutine(Effects.ActionAfterDelay(0.25f,
+        //    new System.Action(() => iconContainer.AddComponent<PlayerIconsBehaviour>().Initialize(__instance))));
+
+        __instance.StartCoroutine(Effects.ActionAfterDelay(0.75f, new System.Action(() => {
+
+            // Level Icon
+            LevelIcon = Object.Instantiate(HudManager.Instance.MeetingPrefab.PlayerButtonPrefab.LevelNumberText.transform.parent, iconContainer.transform).gameObject;
+            //LevelIcon.transform.GetChild(1).GetComponent<TextMeshPro>().text = "Guest";
+            //LevelIcon.GetComponent<SpriteRenderer>().color = new Color(0.2f, 0.8f, 0.2f, 1f);
+            LevelIcon.transform.GetChild(1).GetComponent<TextMeshPro>().text = __instance.Data.PlayerLevel.ToString();
+
+            // ID Icon
+            IdIcon = Object.Instantiate(HudManager.Instance.MeetingPrefab.PlayerButtonPrefab.LevelNumberText.transform.parent, iconContainer.transform).gameObject;
+            IdIcon.transform.GetChild(1).GetComponent<TextMeshPro>().text = __instance.Data.PlayerId.ToString();
+
+            var headerText = IdIcon.transform.GetChild(0);
+            //headerText.GetComponent<TextTranslatorTMP>().Destroy();
+            Object.Destroy(headerText.GetComponent<TextTranslatorTMP>());
+            headerText.GetComponent<TextMeshPro>().text = "ID";
+            IdIcon.GetComponent<SpriteRenderer>().color = Color.magenta;
+
+            HostIcon = Object.Instantiate(HudManager.Instance.MeetingPrefab.PlayerButtonPrefab.LevelNumberText.transform.parent, iconContainer.transform).gameObject;
+            var text = HostIcon.transform.GetChild(1);
+            text.GetComponent<TextMeshPro>().text = "★";
+            text.transform.localPosition = Vector3.zero;
+            var headerText2 = HostIcon.transform.GetChild(0);
+            Object.Destroy(headerText2.GetComponent<TextTranslatorTMP>());
+            //headerText2.GetComponent<TextTranslatorTMP>().Destroy();
+            headerText2.GetComponent<TextMeshPro>().text = "";
+            HostIcon.GetComponent<SpriteRenderer>().color = new Color(0.5f, 0, 1, 1);
+
+            /*foreach (var go in GetComponentsInChildren<Transform>())
+            {
+                go.gameObject.layer = 0;
+            }*/
+
+        })));
     }
 }
